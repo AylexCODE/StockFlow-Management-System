@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package MSystem;
+package MainSystem;
 
 import Main.Main;
 import java.awt.Color;
@@ -10,23 +10,56 @@ import javax.swing.ImageIcon;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import javax.swing.border.Border;
 
 /**
  *
  * @author crissa jean pagapong
  */
 public class LogIn extends javax.swing.JFrame {
+    Connection conn = Database.Db_conn.conn();
     ImageIcon lockIcon;
+    
+    Border borderBottomRed = javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(255, 0, 0));
+    Border borderBottomBlack = javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(0, 0, 0));
+    
+    boolean isUsernameEmpty = true; // Check line 409
+    boolean isPasswordEmpty = true; // Check line 413
     /**
      * Creates new form LogIn
      */
     public LogIn() {
         lockIcon = new ImageIcon(getClass().getResource("/Images/Icons/lock.png"));
         initComponents();
+        if(!new Functions.CheckDatabaseStatus().CheckDatabaseStats()) databaseInfo.setText("Error establishing a database connection");
     }
     
-    public void validDateInfo(String userName, String passwd){
-        Connection conn = Database.Db_conn.conn();
+    public LogIn(String adminID){
+        initComponents();
+        try{
+            String qeury = "SELECT * FROM Admins WHERE ID = '" +adminID +"';";
+            PreparedStatement pst = conn.prepareStatement(qeury);
+            ResultSet rs = pst.executeQuery();
+            
+            if(rs.next()){
+                String id = rs.getString(2);
+                String userNameD = rs.getString(3);
+                String passwdD = rs.getString(4);
+                
+                username.setForeground(Color.BLACK);
+                username.setText(userNameD);
+                password.setForeground(Color.BLACK);
+                password.setText(passwdD);
+                rememberMe.setSelected(true);
+                isPasswordEmpty = false;
+            }
+        }catch(Exception error){
+            System.out.println(error);
+        }
+    }
+    
+    // For Validating Admin Account in the Database
+    private void loginAccount(String userName, String passwd){
         PreparedStatement pst;
         ResultSet rs;
         
@@ -36,18 +69,29 @@ public class LogIn extends javax.swing.JFrame {
             rs = pst.executeQuery();
             
             if(rs.next()){
-                String id = rs.getString(1);
-                String userNameD = rs.getString(2);
-                String passwdD = rs.getString(3);
+                String id = rs.getString(2);
+                String userNameD = rs.getString(3);
+                String passwdD = rs.getString(4);
                 if(passwd.equals(passwdD)){
-                    System.out.println("Logged In");
-                    new Home().setVisible(true);
                     this.dispose();
+                    if(rememberMe.isSelected()){
+                        new Functions.RememberAccount().setRemember(id, userName, passwdD);
+                        new Home(id, true).setVisible(true);
+                    }else{
+                        new Functions.RememberAccount().setRemember("", "", "");
+                        new Home(id, false).setVisible(true);
+                    }
                 }else{
-                    System.out.println("Wrong Pass word");
+                    passwordError.setText("Incorrect Password!");
+                    password_panel.setBorder(borderBottomRed);
+                    usernameError.setText("");
+                    username_panel.setBorder(borderBottomBlack);
                 }
             }else{
-                System.out.println("Account Not Found!");
+                usernameError.setText("Account Not Found!");
+                username_panel.setBorder(borderBottomRed);
+                passwordError.setText("");
+                password_panel.setBorder(borderBottomBlack);
             }
         }catch(Exception error){
             
@@ -76,6 +120,9 @@ public class LogIn extends javax.swing.JFrame {
         jLabel4 = new javax.swing.JLabel();
         rememberMe = new javax.swing.JCheckBox();
         header = new javax.swing.JLabel();
+        databaseInfo = new javax.swing.JLabel();
+        usernameError = new javax.swing.JLabel();
+        passwordError = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setAutoRequestFocus(false);
@@ -102,7 +149,10 @@ public class LogIn extends javax.swing.JFrame {
         username.setFont(new java.awt.Font("Ebrima", 0, 14)); // NOI18N
         username.setForeground(Color.GRAY);
         username.setText("Username");
+        username.setToolTipText("");
+        username.setActionCommand("<Not Set>");
         username.setBorder(null);
+        username.setName(""); // NOI18N
         username.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 usernameFocusGained(evt);
@@ -145,13 +195,18 @@ public class LogIn extends javax.swing.JFrame {
         password.setForeground(Color.GRAY);
         password.setText("Password");
         password.setBorder(null);
-        password.setEchoChar('\u0000');
+        password.setEchoChar('\0');
         password.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 passwordFocusGained(evt);
             }
             public void focusLost(java.awt.event.FocusEvent evt) {
                 passwordFocusLost(evt);
+            }
+        });
+        password.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                passwordKeyReleased(evt);
             }
         });
 
@@ -228,11 +283,29 @@ public class LogIn extends javax.swing.JFrame {
         rememberMe.setText("Remember me");
         rememberMe.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         rememberMe.setOpaque(true);
+        rememberMe.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                rememberMeStateChanged(evt);
+            }
+        });
 
         header.setFont(new java.awt.Font("Century Gothic", 1, 24)); // NOI18N
         header.setForeground(new java.awt.Color(35, 46, 63));
         header.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         header.setText("ADMIN LOGIN");
+
+        databaseInfo.setBackground(new java.awt.Color(255, 255, 255));
+        databaseInfo.setFont(new java.awt.Font("Century Gothic", 0, 12)); // NOI18N
+        databaseInfo.setForeground(new java.awt.Color(255, 0, 0));
+        databaseInfo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
+        usernameError.setFont(new java.awt.Font("Century Gothic", 0, 12)); // NOI18N
+        usernameError.setForeground(new java.awt.Color(255, 0, 0));
+        usernameError.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+
+        passwordError.setFont(new java.awt.Font("Century Gothic", 0, 12)); // NOI18N
+        passwordError.setForeground(new java.awt.Color(255, 0, 0));
+        passwordError.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 
         javax.swing.GroupLayout uiLayout = new javax.swing.GroupLayout(ui);
         ui.setLayout(uiLayout);
@@ -245,11 +318,16 @@ public class LogIn extends javax.swing.JFrame {
                         .addComponent(button_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(uiLayout.createSequentialGroup()
                         .addGap(43, 43, 43)
-                        .addGroup(uiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(rememberMe)
-                            .addComponent(username_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(header, javax.swing.GroupLayout.PREFERRED_SIZE, 306, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(password_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGroup(uiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(uiLayout.createSequentialGroup()
+                                .addComponent(rememberMe)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(passwordError, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(username_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(header, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(password_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(databaseInfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(usernameError, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 306, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap(85, Short.MAX_VALUE))
         );
         uiLayout.setVerticalGroup(
@@ -257,12 +335,21 @@ public class LogIn extends javax.swing.JFrame {
             .addGroup(uiLayout.createSequentialGroup()
                 .addContainerGap(35, Short.MAX_VALUE)
                 .addComponent(header, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(79, 79, 79)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(databaseInfo, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(57, 57, 57)
                 .addComponent(username_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(62, 62, 62)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(usernameError, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(40, 40, 40)
                 .addComponent(password_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(12, 12, 12)
-                .addComponent(rememberMe)
+                .addGroup(uiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(uiLayout.createSequentialGroup()
+                        .addGap(12, 12, 12)
+                        .addComponent(rememberMe))
+                    .addGroup(uiLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(passwordError, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(34, 34, 34)
                 .addComponent(button_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(97, Short.MAX_VALUE))
@@ -287,24 +374,31 @@ public class LogIn extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
+    // Remove Placeholder "Username" and set text color to BLACK when focusing on the username textfield
     private void usernameFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_usernameFocusGained
-        if(username.getText().equals("Username")){
+        if(username.getText().equals("Username") && isUsernameEmpty){
             username.setForeground(Color.BLACK);
             username.setText("");
         }
     }//GEN-LAST:event_usernameFocusGained
 
+    /* Set Placeholder "Username" if the textfield is empty when losing focus on the username textfield,
+       also set text color to GRAY if the textfiled is empty else set to BLACK */
     private void usernameFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_usernameFocusLost
-        if(username.getText().isEmpty()){
+        if(username.getText().isBlank()){
             username.setForeground(Color.GRAY);
             username.setText("Username");
+            isUsernameEmpty = true;
         }else{
             username.setForeground(Color.BLACK);
+            isUsernameEmpty = false;
         }
     }//GEN-LAST:event_usernameFocusLost
 
+    /* Remove Placeholder "Password" when focusing on the passwordField,
+       also set icon to locked (lockIcon) */
     private void passwordFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_passwordFocusGained
-        if(password.getText().equals("Password")){
+        if(password.getText().equals("Password") && isPasswordEmpty){
             password.setForeground(Color.BLACK);
             password.setText("");
             password.setEchoChar('\u2022');
@@ -312,37 +406,73 @@ public class LogIn extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_passwordFocusGained
 
+    /* Set Placeholder "Password" if the password field is empty when losing focus on the passwordField,
+       also set icon to locked (lockIcon) */
     private void passwordFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_passwordFocusLost
-        if(password.getText().isEmpty()){
+        if(password.getText().isBlank()){
             password.setForeground(Color.GRAY);
             password.setEchoChar('\0');
             password.setText("Password");
             password_icon.setIcon(lockIcon);
-        }//else{
-//            password.setEchoChar('\u2022');
-//            password.setForeground(Color.BLACK);
-//            password_icon.setIcon(lockIcon);
-//        }
+            isPasswordEmpty = true;
+        }/* else{
+            // Auto hide password and set icon to locked (lockIcon) when losing focus on the passwordField
+            password.setEchoChar('\u2022');
+            password.setForeground(Color.BLACK);
+            password_icon.setIcon(lockIcon); 
+        } */
     }//GEN-LAST:event_passwordFocusLost
 
+    // For Logging in
     private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
         String userName = username.getText();
         String passwd = password.getText();
-        validDateInfo(userName, passwd);
+        usernameError.setText("");
+        username_panel.setBorder(borderBottomBlack);
+        passwordError.setText("");
+        password_panel.setBorder(borderBottomBlack);
+
+        if(isUsernameEmpty){
+            usernameError.setText("Username is empty!");
+            username_panel.setBorder(borderBottomRed);
+        }
+        if(isPasswordEmpty){
+            passwordError.setText("Password is empty!");
+            password_panel.setBorder(borderBottomRed);
+        }
+        if(!isUsernameEmpty && !isPasswordEmpty){
+            loginAccount(userName, passwd);
+        }
     }//GEN-LAST:event_loginButtonActionPerformed
 
+    // For Showing and Hiding password when the lock icon is clicked
     private void password_iconMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_password_iconMouseClicked
-        if(password.getText().equals("Password")){
+        ImageIcon unlockIcon = new ImageIcon(getClass().getResource("/Images/Icons/unlock.png"));
+        if(isPasswordEmpty){
             // Do Nothing
         }else if(password.getEchoChar() == '\0'){
             password.setEchoChar('\u2022');
             password_icon.setIcon(lockIcon);
         }else{
             password.setEchoChar('\0');
-            ImageIcon unlockIcon = new ImageIcon(getClass().getResource("/Images/Icons/unlock.png"));
             password_icon.setIcon(unlockIcon);
         }
     }//GEN-LAST:event_password_iconMouseClicked
+
+    // For Checking if password is empty
+    private void passwordKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_passwordKeyReleased
+        if(username.getText().isBlank()){
+            isPasswordEmpty = true;
+        }else{
+            isPasswordEmpty = false;
+        }
+    }//GEN-LAST:event_passwordKeyReleased
+
+    private void rememberMeStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rememberMeStateChanged
+        if(!rememberMe.isSelected()){
+            new Functions.RememberAccount().setRemember("", "", "");
+        }
+    }//GEN-LAST:event_rememberMeStateChanged
 
     /**
      * @param args the command line arguments
@@ -383,15 +513,18 @@ public class LogIn extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel aside;
     private javax.swing.JPanel button_panel;
+    private javax.swing.JLabel databaseInfo;
     private static javax.swing.JLabel header;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JButton loginButton;
     private javax.swing.JPasswordField password;
+    private javax.swing.JLabel passwordError;
     private javax.swing.JLabel password_icon;
     private javax.swing.JPanel password_panel;
     private javax.swing.JCheckBox rememberMe;
     private javax.swing.JPanel ui;
     private javax.swing.JTextField username;
+    private javax.swing.JLabel usernameError;
     private javax.swing.JLabel username_icon;
     private javax.swing.JPanel username_panel;
     // End of variables declaration//GEN-END:variables

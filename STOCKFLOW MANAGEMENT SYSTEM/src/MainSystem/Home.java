@@ -2,18 +2,24 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package MSystem;
+package MainSystem;
+
+import Main.Main;
+import MainSystem.LogIn;
 
 /**
  *
  * @author crissa jean pagapong
  */
 public class Home extends javax.swing.JFrame {
-
+    String adminID;
+    boolean isAccountRemembered = false;
     /**
      * Creates new form HOME
      */
-    public Home() {
+    public Home(String id, boolean rememberStatus) {
+        adminID = id;
+        isAccountRemembered = rememberStatus;
         initComponents();
     }
 
@@ -31,7 +37,7 @@ public class Home extends javax.swing.JFrame {
         InventoryButton = new javax.swing.JButton();
         logisticPanel = new javax.swing.JButton();
         greenpanel = new javax.swing.JLabel();
-        jButton4 = new javax.swing.JButton();
+        logOut = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         homepanel = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
@@ -82,11 +88,16 @@ public class Home extends javax.swing.JFrame {
         jPanel1.add(logisticPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(59, 310, 96, -1));
         jPanel1.add(greenpanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(6, 6, 201, 137));
 
-        jButton4.setBackground(new java.awt.Color(255, 255, 255));
-        jButton4.setFont(new java.awt.Font("Century Gothic", 1, 12)); // NOI18N
-        jButton4.setForeground(new java.awt.Color(254, 113, 2));
-        jButton4.setText("LOG OUT");
-        jPanel1.add(jButton4, new org.netbeans.lib.awtextra.AbsoluteConstraints(59, 361, 96, -1));
+        logOut.setBackground(new java.awt.Color(255, 255, 255));
+        logOut.setFont(new java.awt.Font("Century Gothic", 1, 12)); // NOI18N
+        logOut.setForeground(new java.awt.Color(254, 113, 2));
+        logOut.setText("LOG OUT");
+        logOut.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                logOutActionPerformed(evt);
+            }
+        });
+        jPanel1.add(logOut, new org.netbeans.lib.awtextra.AbsoluteConstraints(59, 361, 96, -1));
 
         jPanel2.setBackground(new java.awt.Color(255, 255, 255));
         jPanel2.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 0, 0, new java.awt.Color(0, 0, 0)));
@@ -228,6 +239,15 @@ public class Home extends javax.swing.JFrame {
         greenpanel.revalidate();
     }//GEN-LAST:event_logisticPanelMouseClicked
 
+    private void logOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logOutActionPerformed
+        this.dispose();
+        if(isAccountRemembered){
+            new LogIn(adminID).setVisible(true);
+        }else{
+            new LogIn().setVisible(true);
+        }
+    }//GEN-LAST:event_logOutActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -259,7 +279,8 @@ public class Home extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Home().setVisible(true);
+                //new Home().setVisible(true);
+               Main.run();
             }
         });
     }
@@ -270,13 +291,13 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JLabel greenpanel;
     private javax.swing.JPanel homepanel;
     private javax.swing.JPanel inventoryPanel;
-    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable2;
+    private javax.swing.JButton logOut;
     private javax.swing.JPanel logicsticPanel;
     private javax.swing.JButton logisticPanel;
     // End of variables declaration//GEN-END:variables
