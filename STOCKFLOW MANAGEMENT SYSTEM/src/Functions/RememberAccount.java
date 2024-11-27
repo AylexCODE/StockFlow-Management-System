@@ -26,7 +26,7 @@ public class RememberAccount {
        return "Dont Remember";
     }
     
-    public void setRemember(String id, String username, String password){
+    public void setSession(String id, String username, String password){
         try{
             String query;
             if(username.isBlank()){

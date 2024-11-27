@@ -75,10 +75,10 @@ public class LogIn extends javax.swing.JFrame {
                 if(passwd.equals(passwdD)){
                     this.dispose();
                     if(rememberMe.isSelected()){
-                        new Functions.RememberAccount().setRemember(id, userName, passwdD);
+                        new Functions.RememberAccount().setSession(id, userName, passwdD);
                         new Home(id, true).setVisible(true);
                     }else{
-                        new Functions.RememberAccount().setRemember("", "", "");
+                        new Functions.RememberAccount().setSession("", "", "");
                         new Home(id, false).setVisible(true);
                     }
                 }else{
@@ -108,6 +108,7 @@ public class LogIn extends javax.swing.JFrame {
     private void initComponents() {
 
         aside = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
         ui = new javax.swing.JPanel();
         username_panel = new javax.swing.JPanel();
         username = new javax.swing.JTextField();
@@ -129,15 +130,23 @@ public class LogIn extends javax.swing.JFrame {
 
         aside.setBackground(new java.awt.Color(27, 65, 55));
 
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/LOGO.png"))); // NOI18N
+
         javax.swing.GroupLayout asideLayout = new javax.swing.GroupLayout(aside);
         aside.setLayout(asideLayout);
         asideLayout.setHorizontalGroup(
             asideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 348, Short.MAX_VALUE)
+            .addGroup(asideLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 327, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(15, Short.MAX_VALUE))
         );
         asideLayout.setVerticalGroup(
             asideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGroup(asideLayout.createSequentialGroup()
+                .addGap(55, 55, 55)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 306, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         ui.setBackground(new java.awt.Color(255, 255, 255));
@@ -470,7 +479,7 @@ public class LogIn extends javax.swing.JFrame {
 
     private void rememberMeStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rememberMeStateChanged
         if(!rememberMe.isSelected()){
-            new Functions.RememberAccount().setRemember("", "", "");
+            new Functions.RememberAccount().setSession("", "", "");
         }
     }//GEN-LAST:event_rememberMeStateChanged
 
@@ -515,6 +524,7 @@ public class LogIn extends javax.swing.JFrame {
     private javax.swing.JPanel button_panel;
     private javax.swing.JLabel databaseInfo;
     private static javax.swing.JLabel header;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JButton loginButton;
     private javax.swing.JPasswordField password;
