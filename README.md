@@ -10,7 +10,7 @@ INSERT INTO Admins (ID, Username, Password) VALUES ("000000", "test", "test"), (
 
 ### For Inventory
 > USE StockFlow_Management_System;
-CREATE TABLE Inventory(Product_ID INTEGER AUTO_INCREMENT PRIMARY KEY, Product_Name VARCHAR(50), Product_Price DOUBLE(5,2), Product_Sales_Value DOUBLE(5,2), Product_Stock INT(11));
+CREATE TABLE Inventory(Product_ID INTEGER AUTO_INCREMENT PRIMARY KEY, Product_Name VARCHAR(50), Product_Category VARCHAR(50), Product_Price DOUBLE(5,2), Product_Sales_Value DOUBLE(5,2), Product_Stock INT(11));
 INSERT INTO Inventory (Product_Name, Product_Price, Product_Sales_Value, Product_Stock) VALUES ("Metal Bat", 49.00, 79.00, 2), ("Fishing Rod", 250.00, 300.00, 4), ("Wheel", 899.00, 999.00, 2);
 
 ### For Logistics
